@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure OpenAI PTU Calculator | Deloitte</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-text">Deloitte</span>
+                <span class="logo-dot">.</span>
+            </div>
+            <div class="app-title">
+                <h1>Azure OpenAI PTU Calculator</h1>
+                <span class="subtitle">Enterprise Capacity Planning Framework</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="project-selector">
+                <label for="projectSelect">Project:</label>
+                <select id="projectSelect" class="project-dropdown">
+                    <option value="demo">📊 Demo Examples</option>
+                </select>
+                <button class="btn btn-sm btn-secondary" id="newProjectBtn" title="New Client Project">+ New</button>
+                <button class="btn btn-sm btn-secondary" id="deleteProjectBtn" title="Delete Project">🗑</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="export-dropdown">
+                <button class="btn btn-primary" id="exportBtn">
+                    <span class="icon">&#8595;</span> Export
+                </button>
+                <div class="dropdown-menu" id="exportMenu">
+                    <button class="dropdown-item" id="exportPdf">Export as PDF</button>
+                    <button class="dropdown-item" id="exportExcel">Export as Excel</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Demo Mode Banner -->
+    <div class="demo-banner" id="demoBanner">
+        <span class="demo-icon">📊</span>
+        <span class="demo-text"><strong>Demo Mode:</strong> Viewing example workloads. Create a new project to start your own client calculations.</span>
+        <button class="btn btn-sm btn-primary" id="createFromDemo">Create Client Project</button>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="dashboard">
+            <span class="tab-icon">&#9633;</span> Dashboard
+        </button>
+        <button class="tab-btn" data-tab="configuration">
+            <span class="tab-icon">&#9881;</span> Configuration
+        </button>
+        <button class="tab-btn" data-tab="workloads">
+            <span class="tab-icon">&#9776;</span> Workload Inputs
+        </button>
+        <button class="tab-btn" data-tab="ptu-rates">
+            <span class="tab-icon">&#8644;</span> PTU Rates
+        </button>
+        <button class="tab-btn" data-tab="capacity">
+            <span class="tab-icon">&#9650;</span> Capacity Summary
+        </button>
+        <button class="tab-btn" data-tab="cost-analysis">
+            <span class="tab-icon">&#36;</span> Cost Analysis
+        </button>
+        <button class="tab-btn" data-tab="spillover">
+            <span class="tab-icon">&#8651;</span> Spillover Planner
+        </button>
+        <button class="tab-btn" data-tab="chargeback">
+            <span class="tab-icon">&#9638;</span> Chargeback
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Dashboard Tab -->
+        <section class="tab-content active" id="tab-dashboard">
+            <div class="dashboard-grid">
+                <div class="metric-card primary">
+                    <div class="metric-label">Total PTUs Required</div>
+                    <div class="metric-value" id="dash-total-ptus">0</div>
+                    <div class="metric-unit">PTUs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Monthly Cost (Hourly)</div>
+                    <div class="metric-value" id="dash-monthly-hourly">$0</div>
+                    <div class="metric-unit">USD/month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Monthly Cost (1-Year Reserved)</div>
+                    <div class="metric-value" id="dash-monthly-reserved">$0</div>
+                    <div class="metric-unit">USD/month</div>
+                </div>
+                <div class="metric-card success">
+                    <div class="metric-label">Annual Savings (1-Year)</div>
+                    <div class="metric-value" id="dash-annual-savings">$0</div>
+                    <div class="metric-unit">USD/year</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Applications Configured</div>
+                    <div class="metric-value" id="dash-app-count">0</div>
+                    <div class="metric-unit">Apps</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Target Utilization</div>
+                    <div class="metric-value" id="dash-utilization">85%</div>
+                    <div class="metric-unit">of capacity</div>
+                </div>
+            </div>
+
+            <div class="dashboard-sections">
+                <div class="section-card">
+                    <h3>Quick Start Guide</h3>
+                    <ol class="guide-list">
+                        <li><strong>Configuration:</strong> Set your deployment type, region, and pricing parameters</li>
+                        <li><strong>Workload Inputs:</strong> Add your applications with token estimates and peak RPM</li>
+                        <li><strong>PTU Rates:</strong> Verify model conversion rates are current</li>
+                        <li><strong>Capacity Summary:</strong> Review calculated PTU requirements</li>
+                        <li><strong>Cost Analysis:</strong> Compare PTU vs PAYGO economics</li>
+                        <li><strong>Spillover Planner:</strong> Optimize hybrid PTU/PAYGO architecture</li>
+                    </ol>
+                </div>
+                <div class="section-card">
+                    <h3>Workload Summary</h3>
+                    <table class="summary-table" id="dash-workload-summary">
+                        <thead>
+                            <tr>
+                                <th>Application</th>
+                                <th>Model</th>
+                                <th>Est. PTUs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="empty-row">
+                                <td colspan="3">No workloads configured. Go to Workload Inputs to add applications.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuration Tab -->
+        <section class="tab-content" id="tab-configuration">
+            <div class="config-grid">
+                <div class="config-section">
+                    <h3>Pricing & Region Settings</h3>
+                    <div class="form-group">
+                        <label for="deploymentType">Deployment Type</label>
+                        <select id="deploymentType" class="form-control">
+                            <option value="Global Provisioned">Global Provisioned</option>
+                            <option value="Data Zone Provisioned">Data Zone Provisioned</option>
+                            <option value="Regional Provisioned">Regional Provisioned</option>
+                        </select>
+                        <span class="form-hint">Determines minimum PTU increments and data residency</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="primaryRegion">Primary Region</label>
+                        <select id="primaryRegion" class="form-control">
+                            <option value="East US">East US</option>
+                            <option value="East US 2" selected>East US 2</option>
+                            <option value="West US">West US</option>
+                            <option value="West US 2">West US 2</option>
+                            <option value="Central US">Central US</option>
+                            <option value="North Europe">North Europe</option>
+                            <option value="West Europe">West Europe</option>
+                            <option value="UK South">UK South</option>
+                            <option value="Japan East">Japan East</option>
+                            <option value="Australia East">Australia East</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="secondaryRegion">Secondary Region (Failover)</label>
+                        <select id="secondaryRegion" class="form-control">
+                            <option value="East US">East US</option>
+                            <option value="East US 2">East US 2</option>
+                            <option value="West US">West US</option>
+                            <option value="West US 2" selected>West US 2</option>
+                            <option value="Central US">Central US</option>
+                            <option value="North Europe">North Europe</option>
+                            <option value="West Europe">West Europe</option>
+                            <option value="UK South">UK South</option>
+                            <option value="Japan East">Japan East</option>
+                            <option value="Australia East">Australia East</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hourlyRate">Hourly PTU Rate ($/PTU/hr)</label>
+                        <input type="number" id="hourlyRate" class="form-control input-blue" value="0.0396" step="0.0001">
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Reservation Discounts</h3>
+                    <div class="form-group">
+                        <label for="discount1Year">1-Year Reservation Discount (%)</label>
+                        <input type="number" id="discount1Year" class="form-control input-blue" value="20" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="discount3Year">3-Year Reservation Discount (%)</label>
+                        <input type="number" id="discount3Year" class="form-control input-blue" value="40" min="0" max="100">
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Capacity Planning Parameters</h3>
+                    <div class="form-group">
+                        <label for="targetUtilization">Target PTU Utilization (%)</label>
+                        <input type="number" id="targetUtilization" class="form-control input-blue" value="85" min="50" max="100">
+                        <span class="form-hint">Recommended: 80-95%</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="bufferPercentage">Buffer Percentage (%)</label>
+                        <input type="number" id="bufferPercentage" class="form-control input-blue" value="15" min="0" max="50">
+                        <span class="form-hint">Additional capacity for variance</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="peakMultiplier">Peak Traffic Multiplier</label>
+                        <input type="number" id="peakMultiplier" class="form-control input-blue" value="1.2" step="0.1" min="1" max="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="hoursPerMonth">Hours per Month</label>
+                        <input type="number" id="hoursPerMonth" class="form-control" value="730" readonly>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workload Inputs Tab -->
+        <section class="tab-content" id="tab-workloads">
+            <div class="section-header">
+                <h3>Application Workloads</h3>
+                <button class="btn btn-primary" id="addWorkloadBtn">+ Add Workload</button>
+            </div>
+            <p class="section-desc">Enter your application workload details. Blue cells are inputs.</p>
+
+            <div class="table-container">
+                <table class="data-table" id="workloadTable">
+                    <thead>
+                        <tr>
+                            <th>Application Name</th>
+                            <th>Model</th>
+                            <th>Avg Input Tokens</th>
+                            <th>Avg Output Tokens</th>
+                            <th>Peak RPM</th>
+                            <th>Daily Hours</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workloadTableBody">
+                        <!-- Rows added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="calculated-section">
+                <h3>Calculated Metrics</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Input TPM</th>
+                            <th>Output TPM</th>
+                            <th>Total TPM</th>
+                            <th>Est. PTUs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calculatedMetricsBody">
+                        <!-- Calculated rows -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="totals-row">
+                            <td><strong>TOTALS</strong></td>
+                            <td id="totalInputTpm">0</td>
+                            <td id="totalOutputTpm">0</td>
+                            <td id="totalTpm">0</td>
+                            <td id="totalEstPtus">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- PTU Rates Tab -->
+        <section class="tab-content" id="tab-ptu-rates">
+            <div class="section-header">
+                <h3>Model-Specific PTU Rates</h3>
+                <span class="last-updated">Last Updated: February 2026</span>
+            </div>
+            <p class="section-desc">Update these rates quarterly from Microsoft's official calculator.</p>
+
+            <div class="table-container">
+                <table class="data-table" id="ptuRatesTable">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Input TPM/PTU</th>
+                            <th>Output TPM/PTU</th>
+                            <th>Output Ratio</th>
+                            <th>Calculation Method</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ptuRatesBody">
+                        <!-- Populated from ptu-rates.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-section">
+                <h3>Minimum PTU Increments</h3>
+                <table class="data-table compact">
+                    <thead>
+                        <tr>
+                            <th>Deployment Type</th>
+                            <th>Minimum PTUs</th>
+                            <th>Increment Size</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Global Provisioned</td>
+                            <td>15</td>
+                            <td>5</td>
+                            <td>Lowest minimum for cost-effective testing</td>
+                        </tr>
+                        <tr>
+                            <td>Data Zone Provisioned</td>
+                            <td>50</td>
+                            <td>50</td>
+                            <td>Higher minimum, regional data residency</td>
+                        </tr>
+                        <tr>
+                            <td>Regional Provisioned</td>
+                            <td>100</td>
+                            <td>100</td>
+                            <td>Highest minimum, strict data sovereignty</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-callout">
+                <h4>Rate Calculation Notes</h4>
+                <ul>
+                    <li><strong>gpt-5/o3/o4 series:</strong> 1 output token = 8 input tokens (8:1 ratio)</li>
+                    <li><strong>gpt-4.1 series:</strong> 1 output token = 4 input tokens (4:1 ratio)</li>
+                    <li><strong>GPT-4o/o1:</strong> Input and Output TPM calculated separately</li>
+                    <li><strong>Legacy models:</strong> Use combined TPM calculation</li>
+                    <li>Always validate against: <a href="https://oai.azure.com/portal/calculator" target="_blank">oai.azure.com/portal/calculator</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Capacity Summary Tab -->
+        <section class="tab-content" id="tab-capacity">
+            <h3>PTU Capacity Summary</h3>
+
+            <div class="capacity-grid">
+                <div class="capacity-card">
+                    <h4>Capacity Calculation</h4>
+                    <table class="metrics-table">
+                        <tr>
+                            <td>Total Input TPM</td>
+                            <td class="value" id="cap-input-tpm">0</td>
+                            <td class="unit">tokens/min</td>
+                        </tr>
+                        <tr>
+                            <td>Total Output TPM</td>
+                            <td class="value" id="cap-output-tpm">0</td>
+                            <td class="unit">tokens/min</td>
+                        </tr>
+                        <tr>
+                            <td>Total Combined TPM</td>
+                            <td class="value" id="cap-total-tpm">0</td>
+                            <td class="unit">tokens/min</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>Base PTU Requirement</td>
+                            <td class="value" id="cap-base-ptu">0</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                        <tr>
+                            <td>Buffer Allocation</td>
+                            <td class="value" id="cap-buffer-ptu">0</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                        <tr>
+                            <td>Peak Traffic Adjustment</td>
+                            <td class="value" id="cap-peak-ptu">0</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>Minimum Increment</td>
+                            <td class="value" id="cap-min-increment">15</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><strong>TOTAL PTUs REQUIRED</strong></td>
+                            <td class="value highlight" id="cap-total-ptu">0</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="capacity-card">
+                    <h4>Utilization Projections</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>PTUs</th>
+                                <th>Expected Util.</th>
+                                <th>Spillover %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="utilizationProjections">
+                            <tr>
+                                <td>Conservative (100% PTU)</td>
+                                <td id="util-100-ptus">0</td>
+                                <td id="util-100-pct">85%</td>
+                                <td>0%</td>
+                            </tr>
+                            <tr>
+                                <td>Balanced (90% PTU)</td>
+                                <td id="util-90-ptus">0</td>
+                                <td id="util-90-pct">94%</td>
+                                <td>10%</td>
+                            </tr>
+                            <tr>
+                                <td>Aggressive (80% PTU)</td>
+                                <td id="util-80-ptus">0</td>
+                                <td id="util-80-pct">106%</td>
+                                <td>20%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Analysis Tab -->
+        <section class="tab-content" id="tab-cost-analysis">
+            <h3>Cost Analysis & Comparison</h3>
+
+            <div class="cost-grid">
+                <div class="cost-card">
+                    <h4>PTU Cost Calculations</h4>
+                    <table class="metrics-table">
+                        <tr>
+                            <td>PTUs Required</td>
+                            <td class="value" id="cost-ptus">0</td>
+                            <td class="unit">PTUs</td>
+                        </tr>
+                        <tr>
+                            <td>Hourly Rate</td>
+                            <td class="value" id="cost-hourly-rate">$0.0396</td>
+                            <td class="unit">$/PTU/hr</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>Monthly Cost (Hourly)</td>
+                            <td class="value" id="cost-monthly-hourly">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr>
+                            <td>Annual Cost (Hourly)</td>
+                            <td class="value" id="cost-annual-hourly">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>1-Year Reserved Monthly</td>
+                            <td class="value success" id="cost-monthly-1yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr>
+                            <td>1-Year Reserved Annual</td>
+                            <td class="value success" id="cost-annual-1yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>3-Year Reserved Monthly</td>
+                            <td class="value success" id="cost-monthly-3yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr>
+                            <td>3-Year Reserved Annual</td>
+                            <td class="value success" id="cost-annual-3yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr class="highlight">
+                            <td>Annual Savings (1-Year)</td>
+                            <td class="value highlight" id="cost-savings-1yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td>Annual Savings (3-Year)</td>
+                            <td class="value highlight" id="cost-savings-3yr">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="cost-card">
+                    <h4>PAYGO Comparison</h4>
+                    <table class="metrics-table">
+                        <tr>
+                            <td>Monthly Input Tokens</td>
+                            <td class="value" id="paygo-input-tokens">0</td>
+                            <td class="unit">tokens</td>
+                        </tr>
+                        <tr>
+                            <td>Monthly Output Tokens</td>
+                            <td class="value" id="paygo-output-tokens">0</td>
+                            <td class="unit">tokens</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>PAYGO Input Cost</td>
+                            <td class="value" id="paygo-input-cost">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr>
+                            <td>PAYGO Output Cost</td>
+                            <td class="value" id="paygo-output-cost">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><strong>Total PAYGO Monthly</strong></td>
+                            <td class="value" id="paygo-total">$0</td>
+                            <td class="unit">USD</td>
+                        </tr>
+                        <tr class="separator"></tr>
+                        <tr>
+                            <td>PTU vs PAYGO Difference</td>
+                            <td class="value" id="paygo-difference">$0</td>
+                            <td class="unit">USD/month</td>
+                        </tr>
+                        <tr>
+                            <td>PTU Savings %</td>
+                            <td class="value" id="paygo-savings-pct">0%</td>
+                            <td class="unit"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="recommendation-box" id="costRecommendation">
+                <h4>Recommendation</h4>
+                <p id="costRecommendationText">Add workloads to see cost comparison and recommendations.</p>
+            </div>
+        </section>
+
+        <!-- Spillover Planner Tab -->
+        <section class="tab-content" id="tab-spillover">
+            <h3>Spillover Strategy Planner</h3>
+            <p class="section-desc">Configure hybrid PTU + PAYGO architecture for cost optimization.</p>
+
+            <div class="spillover-config">
+                <div class="form-group inline">
+                    <label for="spilloverBase">Base PTU Allocation (%)</label>
+                    <input type="range" id="spilloverBase" min="50" max="100" value="85" class="slider">
+                    <span class="slider-value" id="spilloverBaseValue">85%</span>
+                </div>
+                <div class="form-group inline">
+                    <label>Expected Spillover:</label>
+                    <span class="highlight-value" id="expectedSpillover">15%</span>
+                </div>
+            </div>
+
+            <h4>Spillover Cost Scenarios</h4>
+            <div class="table-container">
+                <table class="data-table" id="spilloverTable">
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>PTU %</th>
+                            <th>PTUs</th>
+                            <th>PTU Cost</th>
+                            <th>Spillover Cost</th>
+                            <th>Total Cost</th>
+                            <th>vs 100% PTU</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spilloverBody">
+                        <!-- Calculated rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-callout">
+                <h4>APIM Configuration Notes</h4>
+                <ul>
+                    <li>Configure PTU endpoint as <strong>Priority 1</strong> in APIM backend pool</li>
+                    <li>Configure same-region PAYGO as <strong>Priority 2</strong> (spillover)</li>
+                    <li>Configure secondary region PAYGO as <strong>Priority 3</strong> (DR)</li>
+                    <li>Enable circuit breaker to auto-failover on 429 errors</li>
+                    <li>Set retry policy with exponential backoff</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Chargeback Tab -->
+        <section class="tab-content" id="tab-chargeback">
+            <h3>Cost Allocation & Chargeback</h3>
+            <p class="section-desc">Allocate PTU costs to consuming applications and business units.</p>
+
+            <div class="table-container">
+                <table class="data-table" id="chargebackTable">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>TPM Share %</th>
+                            <th>PTU Allocation</th>
+                            <th>Monthly Cost</th>
+                            <th>Annual Cost</th>
+                            <th>Cost Center</th>
+                            <th>Owner</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chargebackBody">
+                        <!-- Calculated rows -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="totals-row">
+                            <td><strong>TOTALS</strong></td>
+                            <td id="cb-total-share">100%</td>
+                            <td id="cb-total-ptus">0</td>
+                            <td id="cb-total-monthly">$0</td>
+                            <td id="cb-total-annual">$0</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="info-callout">
+                <h4>Chargeback Notes</h4>
+                <ul>
+                    <li>Costs allocated proportionally based on TPM consumption</li>
+                    <li>Update Cost Center and Owner fields for your organization</li>
+                    <li>Export to finance systems via APIM subscription key metrics</li>
+                    <li>Consider adding buffer allocation to shared/overhead cost center</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Azure OpenAI PTU Calculator v1.0</span>
+            <span>|</span>
+            <span>Deloitte Microsoft Technology & Services Practice</span>
+            <span>|</span>
+            <span>February 2026</span>
+        </div>
+    </footer>
+
+    <!-- Modal for creating new project -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>New Client Project</h3>
+                <button class="modal-close" id="projectModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="projectName">Client/Project Name</label>
+                    <input type="text" id="projectName" class="form-control input-blue" placeholder="e.g., Contoso Corp - Phase 1">
+                </div>
+                <div class="form-group">
+                    <label>Initial Data</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="projectInit" value="empty" checked>
+                            <span>Start Empty</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="projectInit" value="copy-demo">
+                            <span>Copy Demo Examples</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="projectInit" value="copy-current">
+                            <span>Copy Current Project</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="projectModalCancel">Cancel</button>
+                <button class="btn btn-primary" id="projectModalSave">Create Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding workloads -->
+    <div class="modal" id="workloadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Workload</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="wl-name">Application Name</label>
+                    <input type="text" id="wl-name" class="form-control input-blue" placeholder="e.g., Customer Chatbot">
+                </div>
+                <div class="form-group">
+                    <label for="wl-model">Model</label>
+                    <select id="wl-model" class="form-control input-blue">
+                        <!-- Populated from ptu-rates.js -->
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wl-input-tokens">Avg Input Tokens</label>
+                        <input type="number" id="wl-input-tokens" class="form-control input-blue" value="800">
+                    </div>
+                    <div class="form-group">
+                        <label for="wl-output-tokens">Avg Output Tokens</label>
+                        <input type="number" id="wl-output-tokens" class="form-control input-blue" value="400">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wl-peak-rpm">Peak RPM</label>
+                        <input type="number" id="wl-peak-rpm" class="form-control input-blue" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="wl-daily-hours">Daily Hours</label>
+                        <input type="number" id="wl-daily-hours" class="form-control input-blue" value="16" min="1" max="24">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="wl-priority">Priority (1=Highest)</label>
+                    <select id="wl-priority" class="form-control input-blue">
+                        <option value="1">1 - High Priority</option>
+                        <option value="2">2 - Medium Priority</option>
+                        <option value="3">3 - Low Priority</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn-primary" id="modalSave">Save Workload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="js/lib/jspdf.umd.min.js"></script>
+    <script src="js/lib/xlsx.full.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="js/data/ptu-rates.js"></script>
+    <script src="js/calculators/ptu-calculator.js"></script>
+    <script src="js/calculators/cost-calculator.js"></script>
+    <script src="js/calculators/spillover-calculator.js"></script>
+    <script src="js/components/tabs.js"></script>
+    <script src="js/components/workload-table.js"></script>
+    <script src="js/components/project-manager.js"></script>
+    <script src="js/export/pdf-export.js"></script>
+    <script src="js/export/excel-export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
